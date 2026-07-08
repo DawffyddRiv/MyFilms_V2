@@ -1,0 +1,83 @@
+version: '3.8'
+
+# Configuración común para todos los servicios de Airflow
+x-airflow-common: &airflow-common
+  build: 
+    context: ./airflow
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: '30'
+    AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: '10'
+    PYTHONPATH: /opt/airflow:/opt/airflow/spark_scripts
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - airflow_logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+    - ./spark_scripts:/opt/airflow/spark_scripts
+    - ./data:/opt/airflow/data
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  # Base de datos para Airflow y tus prácticas de SQL
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  # Interfaz gráfica de Airflow (puerto 8080)
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # El cerebro que ejecuta las tareas
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+
+  # Motor de procesamiento Spark (Master)
+  spark-master:
+    build:
+      context: ./spark  
+    ports:
+      - "9090:8080"
+      - "7077:7077"
+    volumes:
+      - ./spark_scripts:/opt/spark/spark_scripts # <--- ESTE ES EL PUENTE
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+
+  # Trabajador de Spark
+  spark-worker:
+    build:
+      context: ./spark  
+    depends_on:
+      - spark-master
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+
+volumes:
+  postgres_data:
+  airflow_logs:

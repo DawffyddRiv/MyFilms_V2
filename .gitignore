@@ -1,0 +1,19 @@
+# Environment
+.env
+.venv/
+#Python
+__pycache__/
+.pytest_cache/
+*.pyc
+# Jupyter
+.ipynb_checkpoints/
+
+# Docker
+logs/
+postgres_data/
+
+
+*.db
+*.csv
+
+
