@@ -81,7 +81,13 @@ class ExtractorDatos:
                 logger.warning(f"No se encontró: {titulo}")
         return pd.DataFrame(data)
 
-   
+    def guarda_parquet(self,datafra,ruta):
+        try:
+            datafra.to_parquet(ruta,index=False)
+            logger.info(f"Se ha guardado el archivo parquet en la ruta : {ruta} ")
+        except:
+            logger.exception("Error al guardar el archivo parquet")
+    
 
 
 
@@ -96,3 +102,4 @@ if __name__ == "__main__":
     nombrespeliculas=pelis.busqueda_peliculas(palabrasClave) 
     datosPeliculas=pelis.extrae_data_pelicula(nombrespeliculas)
     print(datosPeliculas)
+    pelis.guarda_parquet(datosPeliculas,"data/raw/peliculas.parquet")

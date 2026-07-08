@@ -13,7 +13,14 @@ logs/
 postgres_data/
 
 
+# Archivos de datos
+data/raw/
+data/processed/
+data/external/
 *.db
 *.csv
+*.parquet
+*.log
 
-
+# VS Code
+.vscode/
