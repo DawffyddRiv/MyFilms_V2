@@ -5,8 +5,6 @@ import numpy as np
 
 
 
-# Configuración básica de logging si no está en el main
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Transformador:
     """
@@ -16,9 +14,9 @@ class Transformador:
     def __init__(self):
         pass
 
-    # ==========================================
-    # 1. SUB-ETAPA: LIMPIEZA Y SANITIZACIÓN
-    # ==========================================
+    
+    # 1. SUB-ETAPA: LIMPIEZA 
+    
     def _limpiar_y_sanitizar(self, df: pd.DataFrame) -> pd.DataFrame:
         """Renombra columnas, estandariza tipos de datos y elimina duplicados."""
         df_clean = df.copy()
@@ -41,9 +39,9 @@ class Transformador:
         
         return df_clean
 
-    # ==========================================
+    
     # * NUEVA ETAPA: VALIDACIÓN DE CALIDAD DE DATOS (Data Quality)
-    # ==========================================
+    
     def _validar_calidad_datos(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Identifica anomalías (nulos, negativos inválidos).
@@ -77,9 +75,9 @@ class Transformador:
 
         return df_valido
 
-    # ==========================================
+    
     # 2. SUB-ETAPA: LÓGICA DE NEGOCIO
-    # ==========================================
+    
     def _aplicar_reglas_negocio(self, df: pd.DataFrame, hora_ini: int, hora_fin: int) -> pd.DataFrame:
         """Aplica filtros específicos y añade columnas calculadas/flags de negocio."""
         df_business = df.copy()
@@ -98,9 +96,9 @@ class Transformador:
         
         return df_business
 
-    # ==========================================
+    
     # 3. SUB-ETAPA: STRUCTURING / AGGREGATION
-    # ==========================================
+    
     def _estructurar_destino(self, df: pd.DataFrame) -> pd.DataFrame:
         """Garantiza el orden de columnas exacto que requiere el destino (Load)."""
         columnas_finales = [
@@ -113,9 +111,9 @@ class Transformador:
         # Nos aseguramos de que solo viajen estas columnas al destino
         return df[columnas_finales].reset_index(drop=True)
 
-    # ==========================================
+    
     # PIPELINE DE TRANSFORMACIÓN PRINCIPAL (Micro-Orquestador)
-    # ==========================================
+    
     def ejecutar_transformacion(self, df_raw: pd.DataFrame, hora_ini: int, hora_fin: int) -> pd.DataFrame:
         """
         Punto de entrada único del componente. Orquesta el flujo secuencial interno.

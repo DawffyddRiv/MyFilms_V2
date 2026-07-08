@@ -6,10 +6,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
 
 
 class CargaDatos:
@@ -22,9 +18,9 @@ class CargaDatos:
     def __init__(self):
         pass
 
-    # ==========================================
+    
     # VALIDACIÓN DEL DATAFRAME
-    # ==========================================
+    
 
     def _validar_dataframe(self, df: pd.DataFrame):
 
@@ -36,9 +32,9 @@ class CargaDatos:
 
         logging.info(f"Registros a cargar: {len(df)}")
 
-    # ==========================================
+    
     # CARGA A CSV
-    # ==========================================
+    
 
     def guardar_csv(
         self,
@@ -68,10 +64,9 @@ class CargaDatos:
 
             raise
 
-    # ==========================================
+    
     # CARGA A PARQUET
-    # ==========================================
-
+    
     def guardar_parquet(
         self,
         df: pd.DataFrame,
@@ -100,9 +95,9 @@ class CargaDatos:
 
             raise
 
-    # ==========================================
+    
     # CARGA A POSTGRESQL
-    # ==========================================
+    
 
     def guardar_postgres(
         self,
@@ -141,9 +136,9 @@ class CargaDatos:
 
             raise
 
-    # ==========================================
+    
     # RESUMEN DE CARGA
-    # ==========================================
+    
 
     def mostrar_resumen(self, df: pd.DataFrame):
 

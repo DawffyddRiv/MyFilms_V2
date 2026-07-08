@@ -7,9 +7,9 @@ from spark_scripts.Extraccion import ExtractorDatos
 from spark_scripts.Transformacion import Transformador
 from spark_scripts.Cargador import CargaDatos
 
-# ==========================================================
+
 # CONFIGURACIÓN DEL DAG
-# ==========================================================
+
 
 default_args = {
     "owner": "data_engineering",
@@ -17,9 +17,7 @@ default_args = {
     "retries": 1,
 }
 
-# ==========================================================
 # TAREA 1 - EXTRACCIÓN
-# ==========================================================
 
 def tarea_extraccion(**context):
     """
@@ -44,9 +42,9 @@ def tarea_extraccion(**context):
 
     logging.info("Extracción finalizada.")
 
-# ==========================================================
+
 # TAREA 2 - TRANSFORMACIÓN
-# ==========================================================
+
 
 def tarea_transformacion(**context):
 
@@ -76,9 +74,9 @@ def tarea_transformacion(**context):
 
     logging.info("Transformación finalizada.")
 
-# ==========================================================
+
 # TAREA 3 - CARGA
-# ==========================================================
+
 
 def tarea_carga(**context):
 
@@ -104,9 +102,9 @@ def tarea_carga(**context):
 
     logging.info("Carga finalizada.")
 
-# ==========================================================
+
 # DEFINICIÓN DEL DAG
-# ==========================================================
+
 
 with DAG(
 
