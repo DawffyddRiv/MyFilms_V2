@@ -1,6 +1,8 @@
 
-# Titulo del proyecto
-Descripciom
+# ETL de peliculas (Version 2)
+Descripcion: Se realiza la reconstruccion del un etl para mejorar la estructura del proyecto. 
+A 07/07/2026 se ha reconstruido solo la etapa de extracción de información.
+
 
 ## Tecnologías empleadas
 * Lenguaje:Python(requests,logging,pandas,json,SQLAlchemy)
