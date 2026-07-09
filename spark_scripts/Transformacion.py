@@ -1,8 +1,9 @@
-from Extraccion import ExtractorDatos
+#from Extraccion import ExtractorDatos
 import logging
 import pandas as pd
 import numpy as np
 
+from pyspark.sql import SparkSession
 
 
 
@@ -11,14 +12,39 @@ class Transformador:
     Clase encargada EXCLUSIVAMENTE de la transformación y validación de datos de clima.
     Aplica el principio de diseño: Recibe un DataFrame, devuelve un DataFrame.
     """
-    def __init__(self):
-        pass
+    def __init__(self,spark,ruta_parquet):
+        self.spark = spark
+        self.ruta_parq=ruta_parquet
 
+    def cargar_datos(self):
+        self.df=spark.read.parquet(self.ruta_parq)
+        self.df.show(5)
     
+
+
+if __name__ == "__main__":    
+    
+
+    spark = (
+        SparkSession.builder
+        .appName("TransformacionPeliculas")
+        .getOrCreate()
+    )
+    transformador = Transformador(spark,"data/raw/peliculas.parquet")
+
+    transformador.cargar_datos()
+
+
+
+
+    #transformador.limpiar()
+    spark.stop()
+
+
     # 1. SUB-ETAPA: LIMPIEZA 
-    
+    """ 
     def _limpiar_y_sanitizar(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Renombra columnas, estandariza tipos de datos y elimina duplicados."""
+        #Renombra columnas, estandariza tipos de datos y elimina duplicados.
         df_clean = df.copy()
         
         # Renombrado de columnas (mapeo explícito)
@@ -43,10 +69,10 @@ class Transformador:
     # * NUEVA ETAPA: VALIDACIÓN DE CALIDAD DE DATOS (Data Quality)
     
     def _validar_calidad_datos(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Identifica anomalías (nulos, negativos inválidos).
-        En lugar de solo imprimir, separa o limpia los datos.
-        """
+        
+        #Identifica anomalías (nulos, negativos inválidos).
+        #En lugar de solo imprimir, separa o limpia los datos.
+        #
         # Métrica de nulos
         nulos_fecha = df["fecha"].isna().sum()
         nulos_temp = df["temperatura_c"].isna().sum()
@@ -79,7 +105,7 @@ class Transformador:
     # 2. SUB-ETAPA: LÓGICA DE NEGOCIO
     
     def _aplicar_reglas_negocio(self, df: pd.DataFrame, hora_ini: int, hora_fin: int) -> pd.DataFrame:
-        """Aplica filtros específicos y añade columnas calculadas/flags de negocio."""
+        #Aplica filtros específicos y añade columnas calculadas/flags de negocio.
         df_business = df.copy()
         
         # Tu filtro original por rango de horas
@@ -100,7 +126,7 @@ class Transformador:
     # 3. SUB-ETAPA: STRUCTURING / AGGREGATION
     
     def _estructurar_destino(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Garantiza el orden de columnas exacto que requiere el destino (Load)."""
+        #Garantiza el orden de columnas exacto que requiere el destino (Load).
         columnas_finales = [
             "fecha",
             "temperatura_c",
@@ -115,9 +141,9 @@ class Transformador:
     # PIPELINE DE TRANSFORMACIÓN PRINCIPAL (Micro-Orquestador)
     
     def ejecutar_transformacion(self, df_raw: pd.DataFrame, hora_ini: int, hora_fin: int) -> pd.DataFrame:
-        """
-        Punto de entrada único del componente. Orquesta el flujo secuencial interno.
-        """
+        
+        #Punto de entrada único del componente. Orquesta el flujo secuencial interno.
+        
         try:
             logging.info("Iniciando proceso de transformación...")
             
@@ -142,3 +168,5 @@ class Transformador:
         except Exception as e:
             logging.error(f"Error inesperado en la fase de transformación: {e}")
             raise
+
+         """
