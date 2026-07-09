@@ -35,7 +35,7 @@ if __name__ == "__main__":
     transformador.cargar_datos()
 
 
-
+    #Comentario
 
     #transformador.limpiar()
     spark.stop()
