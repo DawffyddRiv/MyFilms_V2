@@ -11,7 +11,7 @@ from pyspark.sql.functions import broadcast
 from pyspark.sql.functions import col, count, when
 from pyspark.sql.functions import explode
 from pyspark.sql.functions import size
-
+from pyspark.sql.functions import expr
 
 class Transformador:
     """
@@ -74,17 +74,29 @@ class Transformador:
         self.df.groupBy(size("Ratings").alias("num_ratings")) \
        .count() \
        .show()
-        #print("Analisis de nulos por columna")
-        #self.df.select([
-        #    count(when(col(c).isNull(), c)).alias(c)
-        #     for c in self.df.columns
-        #     ]).show(vertical=True)
+        self.df=( #Filtra por x.Source y devúelveme el valor asociado a ese Source
+            self.df.withColumn("Rotten",
+            expr("filter(Ratings,x -> x.Source= 'Rotten Tomatoes')[0].Value")) 
+            .withColumn("IMDB",
+            expr("filter(Ratings,x -> x.Source= 'Internet Movie Database')[0].Value"))            
+            .withColumn("Metacritic",
+            expr("filter(Ratings,x -> x.Source= 'Metacritic')[0].Value"))
+            .drop("Ratings")
+        )    
+
+        self.df.show()
+        self.df.printSchema()#Ahora si ya tenemos un schema plano
+        print("Analisis de nulos por columna")
+        self.df.select([
+            count(when(col(c).isNull(), c)).alias(c)
+             for c in self.df.columns
+             ]).show(vertical=True)
         #valores N/A
-        #print("Analisis para valores nulos")
-        #self.df.select([
-        #    count(when(col(c)== "N/A",c)).alias(c)
-        #    for c in self.df.columns
-        #]).show(vertical=True)
+        print("Analisis para valores nulos")
+        self.df.select([
+            count(when(col(c)== "N/A",c)).alias(c)
+            for c in self.df.columns
+        ]).show(vertical=True)
         
         #print(self.df.schema)
     
