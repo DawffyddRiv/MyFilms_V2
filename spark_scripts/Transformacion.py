@@ -4,42 +4,105 @@ import pandas as pd
 import numpy as np
 
 from pyspark.sql import SparkSession
-
+from pyspark.sql.types import *
+from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+from pyspark.sql.functions import broadcast
+from pyspark.sql.functions import col, count, when
+from pyspark.sql.functions import explode
+from pyspark.sql.functions import size
 
 
 class Transformador:
     """
     Clase encargada EXCLUSIVAMENTE de la transformación y validación de datos de clima.
-    Aplica el principio de diseño: Recibe un DataFrame, devuelve un DataFrame.
+    recibe una ruta de un archivo parquet y lo transforma.
     """
     def __init__(self,spark,ruta_parquet):
         self.spark = spark
         self.ruta_parq=ruta_parquet
 
     def cargar_datos(self):
-        self.df=spark.read.parquet(self.ruta_parq)
-        self.df.show(5)
-    
+        """schema_a=StructType([
+        StructField("Title",StringType(),True),
+        StructField("Year",StringType(),True),
+        StructField("Rated",StringType(),True),
+        StructField("Released",StringType(),True),
+        StructField("Runtime",StringType(),True),
+        StructField("Genre",StringType(),True),
+        StructField("Director",StringType(),True),
+        StructField("Writer",StringType(),True),
+        StructField("Actors",StringType(),True),
+        StructField("Plot",StringType(),True),
+        StructField("Language",StringType(),True),
+        StructField("Country",StringType(),True),
+        StructField("Awards",StringType(),True),
+        StructField("Poster",StringType(),True),
+        StructField("Ratings",StringType(),True),        
+        StructField("Metascore",IntegerType(),True),
+        StructField("imdbRating",DecimalType(10, 2),True),
+        StructField("imdbVotes",IntegerType(),True),
+        StructField("imdbID",StringType(),True),
+        StructField("Type",StringType(),True),
+        StructField("DVD",StringType(),True),
+        StructField("BoxOffice",DecimalType(10, 2),True),
+        StructField("Production",StringType(),True),
+        StructField("Website",StringType(),True),
+        StructField("Response",BooleanType(),True),
+        StructField("totalSeasons",StringType(),True)
+        ])              #Esto de aqui solo cuando sea json o csv"""
+        
+        self.df = self.spark.read.parquet(self.ruta_parq)
+        
+        #def explorar_datos(self):
 
+        #self.df=(
+        #    spark.read
+        #   .format("parquet")
+        #    .schema(schema_a)
+        #    .load(self.ruta_parq))
+        #self.df.show(5)
+        self.df.printSchema()
+        
+
+        self.df.select(explode("Ratings").alias("rating")) \
+            .select("rating.Source") \
+            .distinct() \
+            .show(truncate=False)
+
+        self.df.select("Title", "Ratings").show(10, truncate=False)
+        self.df.groupBy(size("Ratings").alias("num_ratings")) \
+       .count() \
+       .show()
+        #print("Analisis de nulos por columna")
+        #self.df.select([
+        #    count(when(col(c).isNull(), c)).alias(c)
+        #     for c in self.df.columns
+        #     ]).show(vertical=True)
+        #valores N/A
+        #print("Analisis para valores nulos")
+        #self.df.select([
+        #    count(when(col(c)== "N/A",c)).alias(c)
+        #    for c in self.df.columns
+        #]).show(vertical=True)
+        
+        #print(self.df.schema)
+    
+    
 
 if __name__ == "__main__":    
     
-
+    print("De nuevo please")
     spark = (
         SparkSession.builder
         .appName("TransformacionPeliculas")
         .getOrCreate()
     )
-    transformador = Transformador(spark,"data/raw/peliculas.parquet")
+    
+    transformador = Transformador(spark,"/home/iqdav10/data-engineering/projects/proyecto_pelis/data/raw/peliculas.parquet")
 
     transformador.cargar_datos()
-
-
-    #Comentario
-
-    #transformador.limpiar()
-    spark.stop()
-
+    
 
     # 1. SUB-ETAPA: LIMPIEZA 
     """ 
