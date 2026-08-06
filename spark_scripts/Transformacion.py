@@ -12,6 +12,10 @@ from pyspark.sql.functions import col, count, when
 from pyspark.sql.functions import explode
 from pyspark.sql.functions import size
 from pyspark.sql.functions import expr
+from pyspark.sql.functions import regexp_replace
+from pyspark.sql.functions import to_date
+from pyspark.sql.functions import split
+
 
 class Transformador:
     """
@@ -103,8 +107,8 @@ class Transformador:
         print("Analisis de nulos por columna")#null
         self.df.select([
             count(when(col(c).isNull(), c)).alias(c)
-             for c in self.df.columns
-             ]).show(vertical=True)
+            for c in self.df.columns
+            ]).show(vertical=True)
         #valores N/A
         print("Analisis para valores N/A")
         self.df.select([
@@ -116,24 +120,73 @@ class Transformador:
         self.df.filter(self.df["DVD"].isNull()).show()
         self.df.filter(self.df["totalSeasons"].isNull()).show(10)
 
+        #Convertimos los N/A a null
+        self.df = self.df.replace("N/A", None, subset=["Awards","DVD","Metascore", "BoxOffice","Production","Website"])
+
         #Definiendo valores estandar para sustituir por nulos
         valores_estandar = {
+        "Awards":"N/A",
+        "Metascore":"0",
         "DVD": "N/A",                  
         "BoxOffice": "0",              
         "Production": "N/A",       
         "Website": "N/A",
-        "totalSeasons": 0  ,
+        "totalSeasons": "0"  ,
         "Rotten": "0",
         "Metacritic": "0"                  
         }
+        #Aplicamos los valores estandar al dataframe
         self.df = self.df.fillna(valores_estandar)    
         #Ahora vamos a los N/A
-        "columnas_numericas = ["Metascore","DVD","BoxOffice"] A validar esta parte
+        #"columnas_numericas ->"Metascore","BoxOffice"
+        print("Va de nuez el análisis")
+        print("Analisis de nulos por columna")#null
+        self.df.select([
+            count(when(col(c).isNull(), c)).alias(c)
+            for c in self.df.columns
+            ]).show(vertical=True)
+            #valores N/A
+        print("Analisis para valores N/A")
+        self.df.select([
+            count(when(col(c)== "N/A",c)).alias(c)
+            for c in self.df.columns
+            ]).show(vertical=True)
 
+        #Comenzamos a definir el tipo de dato para el análisis posterior
+        self.df=self.df.withColumn("Year",col("Year").cast("int"))
+        self.df = self.df.withColumn("Released",to_date("Released", "dd MMM yyyy"))
+        self.df = self.df.withColumn("Runtime",regexp_replace("Runtime", " min", ""))
+        self.df=self.df.withColumn("Runtime",col("Runtime").cast("int"))
+        self.df=self.df.withColumn("Metascore",col("Metascore").cast("int"))
+        self.df=self.df.withColumn("imdbRating",col("imdbRating").cast("decimal(3,1)"))
+        self.df = self.df.withColumn("imdbVotes",regexp_replace("imdbVotes", ",", ""))
+        self.df=self.df.withColumn("imdbVotes",col("imdbVotes").cast("int"))
+        self.df = self.df.withColumn("BoxOffice",regexp_replace("BoxOffice", "\\$", ""))
+        self.df = self.df.withColumn("BoxOffice",regexp_replace("BoxOffice", ",", ""))
+        self.df=self.df.withColumn("BoxOffice",col("BoxOffice").cast("int"))
+        self.df = self.df.withColumn("Rotten",regexp_replace("Rotten", "%", ""))
+        self.df=self.df.withColumn("Rotten",col("Rotten").cast("int"))
+        self.df = self.df.withColumn("IMDB",split("IMDB", "/").getItem(0))
+        self.df=self.df.withColumn("imdbRating",col("imdbRating").cast("decimal(3,1)"))
+        self.df = self.df.withColumn("Metacritic",split("Metacritic", "/").getItem(0))
+        self.df=self.df.withColumn("Metacritic",col("Metacritic").cast("decimal(3,1)"))
+        self.df.printSchema()
         #print(self.df.schema)
+        print("Va de nuez el análisis")
+        print("Analisis de nulos por columna")#null
+        self.df.select([
+            count(when(col(c).isNull(), c)).alias(c)
+            for c in self.df.columns
+            ]).show(vertical=True)
+        #valores N/A
+        print("Analisis para valores N/A")
+        self.df.select([
+            count(when(col(c)== "N/A",c)).alias(c)
+            for c in self.df.columns
+            ]).show(vertical=True)
     
-    
-
+        self.df.filter(self.df["Year"].isNull()).show()    
+        #Para el caso de year cuando hay un periodo de tiempo, se opta por crear otra columna donde señalamos año de lanzamiento y así capturar solo el año de lanzamiento. En este caso omitiremos este proceso y dejaremos como valores nulos
 if __name__ == "__main__":    
     
     print("De nuevo please")
