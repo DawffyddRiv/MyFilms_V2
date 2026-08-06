@@ -62,18 +62,19 @@ class Transformador:
         #    .schema(schema_a)
         #    .load(self.ruta_parq))
         #self.df.show(5)
-        self.df.printSchema()
+        self.df.printSchema() # tras la exploración se puede apreciar que en todos los campos se permiten valores nulos
         
 
         self.df.select(explode("Ratings").alias("rating")) \
             .select("rating.Source") \
             .distinct() \
-            .show(truncate=False)
+            .show(truncate=False) # Nos da los campos anidados en "Ratings"
 
         self.df.select("Title", "Ratings").show(10, truncate=False)
         self.df.groupBy(size("Ratings").alias("num_ratings")) \
        .count() \
-       .show()
+       .show() #Aqui exploramos tres de los campos, sobre todo el campo Ratings
+        
         self.df=( #Filtra por x.Source y devúelveme el valor asociado a ese Source
             self.df.withColumn("Rotten",
             expr("filter(Ratings,x -> x.Source= 'Rotten Tomatoes')[0].Value")) 
@@ -86,7 +87,20 @@ class Transformador:
 
         self.df.show()
         self.df.printSchema()#Ahora si ya tenemos un schema plano
-        print("Analisis de nulos por columna")
+        #Desde aqui hacemos una prueba para ver si fueron sustituidos
+        #Definiendo valores estandar para sustituir por nulos
+        #valores_estandar = {
+        #"DVD": "N/A",                  
+        #"BoxOffice": "0",              
+        #"Production": "N/A",       
+        #"Website": "N/A",
+        #"totalSeasons": 0  ,
+        #"Rotten": "0",
+        #"Metacritic": "0"                  
+        #}
+        #self.df = self.df.fillna(valores_estandar)    
+
+        print("Analisis de nulos por columna")#null
         self.df.select([
             count(when(col(c).isNull(), c)).alias(c)
              for c in self.df.columns
@@ -97,7 +111,25 @@ class Transformador:
             count(when(col(c)== "N/A",c)).alias(c)
             for c in self.df.columns
         ]).show(vertical=True)
-        
+
+        #Aqui vamos a explorar si aparecen los nulos: 
+        self.df.filter(self.df["DVD"].isNull()).show()
+        self.df.filter(self.df["totalSeasons"].isNull()).show(10)
+
+        #Definiendo valores estandar para sustituir por nulos
+        valores_estandar = {
+        "DVD": "N/A",                  
+        "BoxOffice": "0",              
+        "Production": "N/A",       
+        "Website": "N/A",
+        "totalSeasons": 0  ,
+        "Rotten": "0",
+        "Metacritic": "0"                  
+        }
+        self.df = self.df.fillna(valores_estandar)    
+        #Ahora vamos a los null
+
+
         #print(self.df.schema)
     
     
