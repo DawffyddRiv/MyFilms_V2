@@ -106,7 +106,7 @@ class Transformador:
              for c in self.df.columns
              ]).show(vertical=True)
         #valores N/A
-        print("Analisis para valores nulos")
+        print("Analisis para valores N/A")
         self.df.select([
             count(when(col(c)== "N/A",c)).alias(c)
             for c in self.df.columns
@@ -127,8 +127,8 @@ class Transformador:
         "Metacritic": "0"                  
         }
         self.df = self.df.fillna(valores_estandar)    
-        #Ahora vamos a los null
-
+        #Ahora vamos a los N/A
+        "columnas_numericas = ["Metascore","DVD","BoxOffice"] A validar esta parte
 
         #print(self.df.schema)
     
