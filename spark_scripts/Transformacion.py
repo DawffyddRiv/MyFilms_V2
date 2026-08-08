@@ -8,14 +8,8 @@ from pyspark.sql.types import *
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 from pyspark.sql.functions import broadcast
-from pyspark.sql.functions import col, count, when
-from pyspark.sql.functions import explode
-from pyspark.sql.functions import size
-from pyspark.sql.functions import expr
-from pyspark.sql.functions import regexp_replace
-from pyspark.sql.functions import to_date
-from pyspark.sql.functions import split
-
+from pyspark.sql.functions import col, count, when,explode,size,expr,regexp_replace,split
+from pyspark.sql import DataFrame
 
 class Transformador:
     """
@@ -55,29 +49,29 @@ class Transformador:
         StructField("Response",BooleanType(),True),
         StructField("totalSeasons",StringType(),True)
         ])              #Esto de aqui solo cuando sea json o csv"""
-        
-        self.df = self.spark.read.parquet(self.ruta_parq)
-        
-        #def explorar_datos(self):
 
         #self.df=(
-        #    spark.read
-        #   .format("parquet")
-        #    .schema(schema_a)
-        #    .load(self.ruta_parq))
-        #self.df.show(5)
+                #    spark.read
+                #   .format("parquet")
+                #    .schema(schema_a)
+                #    .load(self.ruta_parq))
+                #self.df.show(5)
+        self.df = self.spark.read.parquet(self.ruta_parq)
+
+    def mostrar_esquema(self):                
         self.df.printSchema() # tras la exploración se puede apreciar que en todos los campos se permiten valores nulos
-        
 
-        self.df.select(explode("Ratings").alias("rating")) \
-            .select("rating.Source") \
-            .distinct() \
-            .show(truncate=False) # Nos da los campos anidados en "Ratings"
 
+    def analizar_anidada(self,columna,alias_columna): # Nos da los campos anidados en "Ratings"
+        self.df.select(explode(columna).alias(alias_columna)) \
+        .select(f"{alias_columna}.Source").distinct().show(truncate=False)       
+
+       
         self.df.select("Title", "Ratings").show(10, truncate=False)
+
         self.df.groupBy(size("Ratings").alias("num_ratings")) \
-       .count() \
-       .show() #Aqui exploramos tres de los campos, sobre todo el campo Ratings
+        .count() \
+        .show() #Aqui exploramos tres de los campos, sobre todo el campo Ratings
         
         self.df=( #Filtra por x.Source y devúelveme el valor asociado a ese Source
             self.df.withColumn("Rotten",
@@ -186,7 +180,9 @@ class Transformador:
             ]).show(vertical=True)
     
         self.df.filter(self.df["Year"].isNull()).show()    
-        #Para el caso de year cuando hay un periodo de tiempo, se opta por crear otra columna donde señalamos año de lanzamiento y así capturar solo el año de lanzamiento. En este caso omitiremos este proceso y dejaremos como valores nulos
+        #Para el caso de year cuando hay un periodo de tiempo, 
+        # se opta por crear otra columna donde señalamos año de lanzamiento y así capturar solo el año de lanzamiento. En 
+        # este caso omitiremos este proceso y dejaremos como valores nulos
 if __name__ == "__main__":    
     
     print("De nuevo please")
@@ -199,7 +195,8 @@ if __name__ == "__main__":
     transformador = Transformador(spark,"/home/iqdav10/data-engineering/projects/proyecto_pelis/data/raw/peliculas.parquet")
 
     transformador.cargar_datos()
-    
+    transformador.mostrar_esquema()
+    transformador.analizar_anidada("Ratings", "rating")
 
     # 1. SUB-ETAPA: LIMPIEZA 
     """ 
