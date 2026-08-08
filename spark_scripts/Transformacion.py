@@ -8,7 +8,7 @@ from pyspark.sql.types import *
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 from pyspark.sql.functions import broadcast
-from pyspark.sql.functions import col, count, when,explode,size,expr,regexp_replace,split
+from pyspark.sql.functions import col, count, when,explode,size,expr,regexp_replace,split,to_date
 from pyspark.sql import DataFrame
 
 class Transformador:
@@ -116,10 +116,12 @@ class Transformador:
         ]).show(vertical=True)
                 #Aqui vamos
         #Aqui vamos a explorar si aparecen los nulos: 
+        print("Veamos si aparecen registros nulos en DVD y totalSeasons")
         self.df.filter(self.df["DVD"].isNull()).show()
         self.df.filter(self.df["totalSeasons"].isNull()).show(10)
-
+    def estandarizar_a_nulos(self):
         #Convertimos los N/A a null
+        #Aqui podríamos hacer una lista y despues meterla a subset pero lo dejamos para el futuro :v
         self.df = self.df.replace("N/A", None, subset=["Awards","DVD","Metascore", "BoxOffice","Production","Website"])
 
         #Definiendo valores estandar para sustituir por nulos
@@ -138,18 +140,21 @@ class Transformador:
         self.df = self.df.fillna(valores_estandar)    
         #Ahora vamos a los N/A
         #"columnas_numericas ->"Metascore","BoxOffice"
+
+
         print("Va de nuez el análisis")
-        print("Analisis de nulos por columna")#null
-        self.df.select([
-            count(when(col(c).isNull(), c)).alias(c)
-            for c in self.df.columns
-            ]).show(vertical=True)
+        #print("Analisis de nulos por columna")#null
+        #self.df.select([
+        #    count(when(col(c).isNull(), c)).alias(c)
+        #    for c in self.df.columns
+        #    ]).show(vertical=True)
             #valores N/A
-        print("Analisis para valores N/A")
-        self.df.select([
-            count(when(col(c)== "N/A",c)).alias(c)
-            for c in self.df.columns
-            ]).show(vertical=True)
+        #print("Analisis para valores N/A")
+        #self.df.select([
+        #    count(when(col(c)== "N/A",c)).alias(c)
+        #    for c in self.df.columns
+        #    ]).show(vertical=True)
+    def estandarizar_campos(self):
 
         #Comenzamos a definir el tipo de dato para el análisis posterior
         self.df=self.df.withColumn("Year",col("Year").cast("int"))
@@ -169,22 +174,22 @@ class Transformador:
         self.df=self.df.withColumn("imdbRating",col("imdbRating").cast("decimal(3,1)"))
         self.df = self.df.withColumn("Metacritic",split("Metacritic", "/").getItem(0))
         self.df=self.df.withColumn("Metacritic",col("Metacritic").cast("decimal(3,1)"))
-        self.df.printSchema()
+        #self.df.printSchema()
         #print(self.df.schema)
-        print("Va de nuez el análisis")
-        print("Analisis de nulos por columna")#null
-        self.df.select([
-            count(when(col(c).isNull(), c)).alias(c)
-            for c in self.df.columns
-            ]).show(vertical=True)
+        #print("Va de nuez el análisis")
+        #print("Analisis de nulos por columna")#null
+        #self.df.select([
+        #    count(when(col(c).isNull(), c)).alias(c)
+        #    for c in self.df.columns
+        #    ]).show(vertical=True)
         #valores N/A
-        print("Analisis para valores N/A")
-        self.df.select([
-            count(when(col(c)== "N/A",c)).alias(c)
-            for c in self.df.columns
-            ]).show(vertical=True)
+        #print("Analisis para valores N/A")
+        #self.df.select([
+        #    count(when(col(c)== "N/A",c)).alias(c)
+        #    for c in self.df.columns
+        #    ]).show(vertical=True)
     
-        self.df.filter(self.df["Year"].isNull()).show()    
+        #self.df.filter(self.df["Year"].isNull()).show()    
         #Para el caso de year cuando hay un periodo de tiempo, 
         # se opta por crear otra columna donde señalamos año de lanzamiento y así capturar solo el año de lanzamiento. En 
         # este caso omitiremos este proceso y dejaremos como valores nulos
@@ -207,7 +212,11 @@ if __name__ == "__main__":
     transformador.aplanar_ratings()
     transformador.mostrar_esquema()#Muetra de nuevo el esquema ya plano
     transformador.analizar_nulos_na()
-
+    transformador.estandarizar_a_nulos()
+    transformador.analizar_nulos_na()
+    transformador.estandarizar_campos()
+    transformador.mostrar_esquema()
+    transformador.analizar_nulos_na()
     # 1. SUB-ETAPA: LIMPIEZA 
     """ 
     def _limpiar_y_sanitizar(self, df: pd.DataFrame) -> pd.DataFrame:
