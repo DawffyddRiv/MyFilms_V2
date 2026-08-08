@@ -66,25 +66,30 @@ class Transformador:
         self.df.select(explode(columna).alias(alias_columna)) \
         .select(f"{alias_columna}.Source").distinct().show(truncate=False)       
 
-       
-        self.df.select("Title", "Ratings").show(10, truncate=False)
+       #ESTAMOS REORDENANDO DESDE AQUI
+        self.df.select("Title", "Ratings").show(10, truncate=False) #Esto se puede omitir
+    def agrupa_un_campo(self,columna,alias_columna):        
+        self.df.groupBy(size(columna).alias(alias_columna)) \
+        .count().show() #Aqui exploramos tres de los campos, sobre todo el campo Ratings
 
-        self.df.groupBy(size("Ratings").alias("num_ratings")) \
-        .count() \
-        .show() #Aqui exploramos tres de los campos, sobre todo el campo Ratings
-        
-        self.df=( #Filtra por x.Source y devúelveme el valor asociado a ese Source
-            self.df.withColumn("Rotten",
-            expr("filter(Ratings,x -> x.Source= 'Rotten Tomatoes')[0].Value")) 
-            .withColumn("IMDB",
-            expr("filter(Ratings,x -> x.Source= 'Internet Movie Database')[0].Value"))            
-            .withColumn("Metacritic",
-            expr("filter(Ratings,x -> x.Source= 'Metacritic')[0].Value"))
-            .drop("Ratings")
-        )    
-
-        self.df.show()
-        self.df.printSchema()#Ahora si ya tenemos un schema plano
+    def aplanar_ratings(self): #Filtra por x.Source y devúelveme el valor asociado a ese Source
+        self.df = (self.df.withColumn("Rotten",
+            expr("filter(Ratings, x -> x.Source = 'Rotten Tomatoes')[0].Value"))
+        .withColumn("IMDB",
+            expr("filter(Ratings, x -> x.Source = 'Internet Movie Database')[0].Value"))
+        .withColumn("Metacritic",expr("filter(Ratings, x -> x.Source = 'Metacritic')[0].Value"))
+        .drop("Ratings"))
+    
+        #self.df=( #Filtra por x.Source y devúelveme el valor asociado a ese Source
+        #    self.df.withColumn("Rotten",
+        #    expr("filter(Ratings,x -> x.Source= 'Rotten Tomatoes')[0].Value")) 
+        #    .withColumn("IMDB",
+        #    expr("filter(Ratings,x -> x.Source= 'Internet Movie Database')[0].Value"))            
+        #    .withColumn("Metacritic",
+        #    expr("filter(Ratings,x -> x.Source= 'Metacritic')[0].Value"))
+        #    .drop("Ratings")
+        self.df.show(5)
+        #self.df.printSchema()#Ahora si ya tenemos un schema plano
         #Desde aqui hacemos una prueba para ver si fueron sustituidos
         #Definiendo valores estandar para sustituir por nulos
         #valores_estandar = {
@@ -97,7 +102,7 @@ class Transformador:
         #"Metacritic": "0"                  
         #}
         #self.df = self.df.fillna(valores_estandar)    
-
+    def analizar_nulos_na(self):
         print("Analisis de nulos por columna")#null
         self.df.select([
             count(when(col(c).isNull(), c)).alias(c)
@@ -109,7 +114,7 @@ class Transformador:
             count(when(col(c)== "N/A",c)).alias(c)
             for c in self.df.columns
         ]).show(vertical=True)
-
+                #Aqui vamos
         #Aqui vamos a explorar si aparecen los nulos: 
         self.df.filter(self.df["DVD"].isNull()).show()
         self.df.filter(self.df["totalSeasons"].isNull()).show(10)
@@ -197,6 +202,11 @@ if __name__ == "__main__":
     transformador.cargar_datos()
     transformador.mostrar_esquema()
     transformador.analizar_anidada("Ratings", "rating")
+    transformador.agrupa_un_campo("Ratings","id_ratings")
+    
+    transformador.aplanar_ratings()
+    transformador.mostrar_esquema()#Muetra de nuevo el esquema ya plano
+    transformador.analizar_nulos_na()
 
     # 1. SUB-ETAPA: LIMPIEZA 
     """ 
