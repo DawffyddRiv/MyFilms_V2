@@ -58,70 +58,57 @@ class Transformador:
                 #self.df.show(5)
         self.df = self.spark.read.parquet(self.ruta_parq)
 
-    def mostrar_esquema(self):                
+    def mostrar_esquema(self):  
+        logging.info("Mostrando schema")              
         self.df.printSchema() # tras la exploración se puede apreciar que en todos los campos se permiten valores nulos
 
 
     def analizar_anidada(self,columna,alias_columna): # Nos da los campos anidados en "Ratings"
+        logging.info("Mostrando campos anidados en Ratings")
         self.df.select(explode(columna).alias(alias_columna)) \
         .select(f"{alias_columna}.Source").distinct().show(truncate=False)       
 
        #ESTAMOS REORDENANDO DESDE AQUI
         self.df.select("Title", "Ratings").show(10, truncate=False) #Esto se puede omitir
-    def agrupa_un_campo(self,columna,alias_columna):        
+    def agrupa_un_campo(self,columna,alias_columna):      
+        logging.info("Exploración de los campos")  
         self.df.groupBy(size(columna).alias(alias_columna)) \
         .count().show() #Aqui exploramos tres de los campos, sobre todo el campo Ratings
 
     def aplanar_ratings(self): #Filtra por x.Source y devúelveme el valor asociado a ese Source
+        logging.info("Extrayenndo campos anidados dentro de Ratings")
         self.df = (self.df.withColumn("Rotten",
             expr("filter(Ratings, x -> x.Source = 'Rotten Tomatoes')[0].Value"))
         .withColumn("IMDB",
             expr("filter(Ratings, x -> x.Source = 'Internet Movie Database')[0].Value"))
         .withColumn("Metacritic",expr("filter(Ratings, x -> x.Source = 'Metacritic')[0].Value"))
         .drop("Ratings"))
-    
-        #self.df=( #Filtra por x.Source y devúelveme el valor asociado a ese Source
-        #    self.df.withColumn("Rotten",
-        #    expr("filter(Ratings,x -> x.Source= 'Rotten Tomatoes')[0].Value")) 
-        #    .withColumn("IMDB",
-        #    expr("filter(Ratings,x -> x.Source= 'Internet Movie Database')[0].Value"))            
-        #    .withColumn("Metacritic",
-        #    expr("filter(Ratings,x -> x.Source= 'Metacritic')[0].Value"))
-        #    .drop("Ratings")
-        self.df.show(5)
-        #self.df.printSchema()#Ahora si ya tenemos un schema plano
-        #Desde aqui hacemos una prueba para ver si fueron sustituidos
-        #Definiendo valores estandar para sustituir por nulos
-        #valores_estandar = {
-        #"DVD": "N/A",                  
-        #"BoxOffice": "0",              
-        #"Production": "N/A",       
-        #"Website": "N/A",
-        #"totalSeasons": 0  ,
-        #"Rotten": "0",
-        #"Metacritic": "0"                  
-        #}
-        #self.df = self.df.fillna(valores_estandar)    
+
     def analizar_nulos_na(self):
-        print("Analisis de nulos por columna")#null
+        #print("Analisis de nulos por columna")#null
+        logging.info("Realizando análisis de nulos por columna")
         self.df.select([
             count(when(col(c).isNull(), c)).alias(c)
             for c in self.df.columns
             ]).show(vertical=True)
+        logging.info("Análisis de nulos finalizado")
         #valores N/A
-        print("Analisis para valores N/A")
+        #print("Analisis para valores N/A")
+        logging.info("Realizando análisis de N/A por columna")
         self.df.select([
             count(when(col(c)== "N/A",c)).alias(c)
             for c in self.df.columns
         ]).show(vertical=True)
+        logging.info("Análisis de N/A finalizado")
                 #Aqui vamos
         #Aqui vamos a explorar si aparecen los nulos: 
-        print("Veamos si aparecen registros nulos en DVD y totalSeasons")
-        self.df.filter(self.df["DVD"].isNull()).show()
-        self.df.filter(self.df["totalSeasons"].isNull()).show(10)
+        #print("Veamos si aparecen registros nulos en DVD y totalSeasons")
+        #self.df.filter(self.df["DVD"].isNull()).show()
+        #self.df.filter(self.df["totalSeasons"].isNull()).show(10)
     def estandarizar_a_nulos(self):
         #Convertimos los N/A a null
-        #Aqui podríamos hacer una lista y despues meterla a subset pero lo dejamos para el futuro :v
+        logging.info("Convirtiendo N/A a nulos y estandarizando valores")
+        #Aqui podríamos hacer una lista y despues meterla a subset pero lo dejamos para el futuro :v        
         self.df = self.df.replace("N/A", None, subset=["Awards","DVD","Metascore", "BoxOffice","Production","Website"])
 
         #Definiendo valores estandar para sustituir por nulos
@@ -138,22 +125,11 @@ class Transformador:
         }
         #Aplicamos los valores estandar al dataframe
         self.df = self.df.fillna(valores_estandar)    
-        #Ahora vamos a los N/A
-        #"columnas_numericas ->"Metascore","BoxOffice"
+        logging.info("Conversión y estandarización finalizada")
 
 
-        print("Va de nuez el análisis")
-        #print("Analisis de nulos por columna")#null
-        #self.df.select([
-        #    count(when(col(c).isNull(), c)).alias(c)
-        #    for c in self.df.columns
-        #    ]).show(vertical=True)
-            #valores N/A
-        #print("Analisis para valores N/A")
-        #self.df.select([
-        #    count(when(col(c)== "N/A",c)).alias(c)
-        #    for c in self.df.columns
-        #    ]).show(vertical=True)
+        #print("Va de nuez el análisis")
+
     def estandarizar_campos(self):
 
         #Comenzamos a definir el tipo de dato para el análisis posterior
@@ -174,25 +150,60 @@ class Transformador:
         self.df=self.df.withColumn("imdbRating",col("imdbRating").cast("decimal(3,1)"))
         self.df = self.df.withColumn("Metacritic",split("Metacritic", "/").getItem(0))
         self.df=self.df.withColumn("Metacritic",col("Metacritic").cast("decimal(3,1)"))
-        #self.df.printSchema()
-        #print(self.df.schema)
-        #print("Va de nuez el análisis")
-        #print("Analisis de nulos por columna")#null
-        #self.df.select([
-        #    count(when(col(c).isNull(), c)).alias(c)
-        #    for c in self.df.columns
-        #    ]).show(vertical=True)
-        #valores N/A
-        #print("Analisis para valores N/A")
-        #self.df.select([
-        #    count(when(col(c)== "N/A",c)).alias(c)
-        #    for c in self.df.columns
-        #    ]).show(vertical=True)
-    
+
         #self.df.filter(self.df["Year"].isNull()).show()    
         #Para el caso de year cuando hay un periodo de tiempo, 
         # se opta por crear otra columna donde señalamos año de lanzamiento y así capturar solo el año de lanzamiento. En 
         # este caso omitiremos este proceso y dejaremos como valores nulos
+    def validar_year(self):
+        registros_invalidos = self.df.filter( (col("Year") < 1870) | (col("Year") > 2026) ).count()
+        if registros_invalidos > 0:
+            #print(f"Se encontraron {registros_invalidos} registros con Year inválido" )
+            logging.warning( f"Se encontraron {registros_invalidos} registros con Year inválido" )
+        else:
+            logging.info("Validación de Year: OK")
+    def validar_id(self):
+        registros_invalidos = self.df.filter(col("imdbID").isNull()).count()
+
+        if registros_invalidos > 0: 
+            print("Se encontraron {registros_invalidos} películas sin imdbID")
+            logging.warning(f"Se encontraron {registros_invalidos} películas sin imdbID")
+        else:
+            logging.info("Validación imdbID: OK")
+    def validar_duplicados(self):
+        duplicados = (self.df.groupBy("imdbID").count().filter(col("count") > 1).count())
+
+        duplicados_imdb = self.df.groupBy("imdbID").count().filter(col("count") > 1).select("imdbID")
+
+        self.df.groupBy("imdbID").count().filter(col("count") > 1).show()
+        self.df.join(duplicados_imdb,on="imdbID",how="inner").show(truncate=False)
+
+
+        if duplicados > 0:
+            logging.warning(f"Se encontraron {duplicados} imdbID duplicados")
+        else:
+            logging.info("Validación de duplicados: OK")
+    def dataframe_destino(self):
+        columnas_destino=[
+        "imdbID",
+        "Title",
+        "Year",
+        "Released",
+        "Runtime",
+        "Genre",
+        "Director",
+        "Actors",
+        "Language",
+        "Country",
+        "Type",
+        "imdbRating",
+        "imdbVotes",
+        "Rotten",
+        "Metacritic",
+        "BoxOffice",
+        "totalSeasons" ]
+    
+        self.df = self.df.select(*columnas_destino)
 if __name__ == "__main__":    
     
     print("De nuevo please")
@@ -203,20 +214,26 @@ if __name__ == "__main__":
     )
     
     transformador = Transformador(spark,"/home/iqdav10/data-engineering/projects/proyecto_pelis/data/raw/peliculas.parquet")
-
+    #De acuerdo al template
     transformador.cargar_datos()
+    #Calidad de datos
     transformador.mostrar_esquema()
     transformador.analizar_anidada("Ratings", "rating")
     transformador.agrupa_un_campo("Ratings","id_ratings")
     
     transformador.aplanar_ratings()
-    transformador.mostrar_esquema()#Muetra de nuevo el esquema ya plano
+    transformador.mostrar_esquema()#Muestra de nuevo el esquema ya plano
     transformador.analizar_nulos_na()
+    #Mitigación
     transformador.estandarizar_a_nulos()
     transformador.analizar_nulos_na()
     transformador.estandarizar_campos()
     transformador.mostrar_esquema()
     transformador.analizar_nulos_na()
+    transformador.validar_year()
+    transformador.validar_id()
+    transformador.validar_duplicados()
+    transformador.dataframe_destino()
     # 1. SUB-ETAPA: LIMPIEZA 
     """ 
     def _limpiar_y_sanitizar(self, df: pd.DataFrame) -> pd.DataFrame:
