@@ -58,6 +58,50 @@ class Transformador:
                 #self.df.show(5)
         self.df = self.spark.read.parquet(self.ruta_parq)
 
+
+    def validar_layout(self):
+        columnas_esperadas = {
+            "Title",
+            "Year",
+            "Rated",
+            "Released",
+            "Runtime",
+            "Genre",
+            "Director",
+            "Writer",
+            "Actors",
+            "Plot",
+            "Language",
+            "Country",
+            "Awards",
+            "Poster",
+            "Ratings",
+            "Metascore",
+            "imdbRating",
+            "imdbVotes",
+            "imdbID",
+            "Type",
+            "DVD",
+            "BoxOffice",
+            "Production",
+            "Website",
+            "Response",
+            "totalSeasons"}
+
+        columnas_actuales = set(self.df.columns)
+
+        faltantes = columnas_esperadas - columnas_actuales
+        adicionales = columnas_actuales - columnas_esperadas
+
+        if faltantes:
+            print(f"Columnas faltantes: {faltantes}")
+            logging.error(f"Columnas faltantes: {faltantes}")
+            raise ValueError("El layout de entrada no coincide con el esperado.") #Para detener el etl
+
+        if adicionales:
+            print(f"Columnas adicionales: {adicionales}")
+            logging.warning(f"Columnas adicionales: {adicionales}")
+
     def mostrar_esquema(self):  
         logging.info("Mostrando schema")              
         self.df.printSchema() # tras la exploración se puede apreciar que en todos los campos se permiten valores nulos
@@ -216,6 +260,8 @@ if __name__ == "__main__":
     transformador = Transformador(spark,"/home/iqdav10/data-engineering/projects/proyecto_pelis/data/raw/peliculas.parquet")
     #De acuerdo al template
     transformador.cargar_datos()
+    #Validando el layout
+    transformador.validar_layout()
     #Calidad de datos
     transformador.mostrar_esquema()
     transformador.analizar_anidada("Ratings", "rating")
@@ -230,10 +276,17 @@ if __name__ == "__main__":
     transformador.estandarizar_campos()
     transformador.mostrar_esquema()
     transformador.analizar_nulos_na()
+    #Validación de contexto
     transformador.validar_year()
     transformador.validar_id()
     transformador.validar_duplicados()
+    #definicion del layout de salida
     transformador.dataframe_destino()
+
+
+#Lo siguiente solo forma parte del template que tenemos como guia
+
+
     # 1. SUB-ETAPA: LIMPIEZA 
     """ 
     def _limpiar_y_sanitizar(self, df: pd.DataFrame) -> pd.DataFrame:
