@@ -103,3 +103,4 @@ if __name__ == "__main__":
     datosPeliculas=pelis.extrae_data_pelicula(nombrespeliculas)
     print(datosPeliculas)
     pelis.guarda_parquet(datosPeliculas,"data/raw/peliculas.parquet")
+    

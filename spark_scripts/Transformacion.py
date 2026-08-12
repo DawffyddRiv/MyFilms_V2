@@ -253,7 +253,8 @@ if __name__ == "__main__":
     print("De nuevo please")
     spark = (
         SparkSession.builder
-        .appName("TransformacionPeliculas")
+        .appName("cargaPeliculas")
+        .config("spark.jars.packages", "org.postgresql:postgresql:42.6.0")
         .getOrCreate()
     )
     
@@ -283,7 +284,7 @@ if __name__ == "__main__":
     #definicion del layout de salida
     transformador.dataframe_destino()
 
-
+    spark.stop()
 #Lo siguiente solo forma parte del template que tenemos como guia
 
 
