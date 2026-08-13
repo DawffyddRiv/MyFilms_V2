@@ -68,6 +68,7 @@ services:
       - "7077:7077"
     volumes:
       - ./spark_scripts:/opt/spark/spark_scripts # <--- ESTE ES EL PUENTE
+      - ./.env:/opt/spark/.env
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
 
   # Trabajador de Spark
