@@ -228,7 +228,7 @@ class Transformador:
         else:
             logging.info("Validación de duplicados: OK")
 
-    def dataframe_destino(self,ruta_salida,ruta_duplicados="/opt/airflow/data/processed/peliculas"):
+    def dataframe_destino(self,ruta_salida,ruta_duplicados="/opt/airflow/data/processed/peliculas_duplicados"):
         columnas_destino=[
         "imdbID",
         "Title",

@@ -38,7 +38,7 @@ class CargaDatos:
             raise
 
 
-    def cargar_a_sql(self,df:DataFrame,nombre_tabla:str,modo:str= "overwrite"): #modo='overwrite'
+    def cargar_a_sql(self,df:DataFrame,nombre_tabla:str,modo:str= "append"): #modo='overwrite'
         if df.rdd.isEmpty():
             print("El DataFrame está vacío. No se cargó nada.")
             logging.warning("El DataFrame está vacío. No se realizará la carga.")
@@ -48,13 +48,13 @@ class CargaDatos:
             raise ValueError("El modo debe ser 'overwrite' o 'append'.")
             
     
-        try:
-
+        try:    
+            logging.info(f"Filas a insertar: {df.count()}")
             (
                 df.write
                 .format("jdbc")
                 .option("url", self.cadenaConexion)
-                .option("dbtable", nombre_tabla)
+                .option("dbtable", f"public.{nombre_tabla}")
                 .option("user", self.usuario)
                 .option("password", self.password)
                 .option("driver", "org.postgresql.Driver")
