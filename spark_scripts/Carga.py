@@ -94,8 +94,8 @@ if __name__ == "__main__":
     print("HOST:", POSTGRES_HOST)
     print("PORT:", POSTGRES_PORT)
     print("DB:", POSTGRES_DB)
-    print("USER:", POSTGRES_USER)
-    print("PWD:", POSTGRES_PASSWORD)
+    print("USER:", POSTGRES_USER)  
+    logging.info("Configuración de PostgreSQL cargada.")  
 
 
     CADENA_CONEXION = (

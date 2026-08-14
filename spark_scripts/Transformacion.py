@@ -108,8 +108,8 @@ class Transformador:
 
 
     def analizar_anidada(self,columna,alias_columna): # Nos da los campos anidados en "Ratings"
-        logging.info("Mostrando campos anidados en Ratings")
-        self.df.select(explode(columna).alias(alias_columna)) \
+        logging.info("Mostrando campos anidados en Ratings")     
+        self.df.select(explode(col(columna)).alias(alias_columna)) \
         .select(f"{alias_columna}.Source").distinct().show(truncate=False)       
 
        #ESTAMOS REORDENANDO DESDE AQUI
@@ -227,7 +227,7 @@ class Transformador:
             logging.warning(f"Se encontraron {duplicados} imdbID duplicados")
         else:
             logging.info("Validación de duplicados: OK")
-    def dataframe_destino(self):
+    def dataframe_destino(self,ruta_salida):
         columnas_destino=[
         "imdbID",
         "Title",
@@ -248,9 +248,11 @@ class Transformador:
         "totalSeasons" ]
     
         self.df = self.df.select(*columnas_destino)
+        self.df.write.mode("overwrite").parquet(ruta_salida)
+
 if __name__ == "__main__":    
     
-    print("De nuevo please")
+    print("Fase de transformación")
     spark = (
         SparkSession.builder
         .appName("cargaPeliculas")
@@ -282,7 +284,7 @@ if __name__ == "__main__":
     transformador.validar_id()
     transformador.validar_duplicados()
     #definicion del layout de salida
-    transformador.dataframe_destino()
+    transformador.dataframe_destino("/opt/airflow/data/processed/peliculas2.parquet")
 
     spark.stop()
 #Lo siguiente solo forma parte del template que tenemos como guia

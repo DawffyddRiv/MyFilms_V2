@@ -20,6 +20,8 @@ x-airflow-common: &airflow-common
     - ./plugins:/opt/airflow/plugins
     - ./spark_scripts:/opt/airflow/spark_scripts
     - ./data:/opt/airflow/data
+    - ./.env:/opt/airflow/.env
+    - ./config:/opt/airflow/config
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     postgres:
