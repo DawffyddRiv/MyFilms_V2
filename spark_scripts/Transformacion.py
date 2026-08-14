@@ -227,7 +227,8 @@ class Transformador:
             logging.warning(f"Se encontraron {duplicados} imdbID duplicados")
         else:
             logging.info("Validación de duplicados: OK")
-    def dataframe_destino(self,ruta_salida):
+
+    def dataframe_destino(self,ruta_salida,ruta_duplicados="/opt/airflow/data/processed/peliculas"):
         columnas_destino=[
         "imdbID",
         "Title",
@@ -246,8 +247,19 @@ class Transformador:
         "Metacritic",
         "BoxOffice",
         "totalSeasons" ]
-    
-        self.df = self.df.select(*columnas_destino)
+
+        df_destino = self.df.select(*columnas_destino)
+        duplicados = df_destino.groupBy("imdbID").count().filter(col("count") > 1)
+
+        
+        if duplicados.count() > 0:
+            logging.warning(f"Se encontraron {duplicados.count()} imdbID duplicados, guardando en archivo aparte...")
+            # almacenamiento de duplicados
+            df_duplicados = df_destino.join(duplicados.select("imdbID"), on="imdbID", how="inner")
+            df_duplicados.write.mode("overwrite").parquet(ruta_duplicados)
+            # Eliminación de duplicados para tener con valores unicos df_destino
+            df_destino = df_destino.dropDuplicates(["imdbID"])
+        self.df = df_destino
         self.df.write.mode("overwrite").parquet(ruta_salida)
 
 if __name__ == "__main__":    

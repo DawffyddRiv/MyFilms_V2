@@ -2,7 +2,7 @@ import requests
 import logging
 import pandas as pd
 #import json
-
+from pyspark.sql import SparkSession
 
 from config.settings import OMDB_API_KEY
 logger = logging.getLogger(__name__)
@@ -83,8 +83,10 @@ class ExtractorDatos:
 
     def guarda_parquet(self,datafra,ruta):
         try:
-            datafra.to_parquet(ruta,index=False)
-            logger.info(f"Se ha guardado el archivo parquet en la ruta : {ruta} ")
+            spark = SparkSession.builder.getOrCreate()
+            df_spark = spark.createDataFrame(datafra)  # convierte el DataFrame de Pandas a Spark
+            df_spark.write.mode("overwrite").parquet(ruta)
+            logger.info(f"Se ha guardado el archivo parquet en la ruta : {ruta}")
         except:
             logger.exception("Error al guardar el archivo parquet")
     

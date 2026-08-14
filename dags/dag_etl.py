@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from pyspark.sql.functions import col,to_date
 
 from datetime import datetime
 import logging
@@ -80,7 +81,7 @@ def tarea_transformacion():
     transformador.validar_id()
     transformador.validar_duplicados()
     #definicion del layout de salida
-    transformador.dataframe_destino("/opt/airflow/data/processed/peliculas.parquet")
+    transformador.dataframe_destino("/opt/airflow/data/processed/peliculas")
 
     spark.stop()
     logging.info("Transformación finalizada.")
@@ -94,7 +95,7 @@ def tarea_carga():
     spark = (
         SparkSession.builder
         .appName("CargaPeliculas")
-        .config("spark.jars", "/opt/spark/jars/postgresql-42.7.3.jar")
+        .config("spark.jars", "/opt/spark/jars/postgresql-42.7.3.jar") #.config("spark.jars.packages", "org.postgresql:postgresql:42.7.3")#.config("spark.jars", "/opt/spark/jars/postgresql-42.7.3.jar")
         .getOrCreate()
         )
     
@@ -117,9 +118,15 @@ def tarea_carga():
     cargador = CargaDatos(spark, CADENA_CONEXION, POSTGRES_USER, POSTGRES_PASSWORD)
     cargador.test_conexion()
     
-    df = spark.read.parquet("/opt/airflow/data/processed/peliculas.parquet")
+    df = spark.read.parquet("/opt/airflow/data/processed/peliculas")
 
-    cargador.cargar_a_sql(df,"peliculas", modo="overwrite")
+    df2 = df.withColumn("imdbRating", col("imdbRating").cast("float")) \
+        .withColumn("Metacritic", col("Metacritic").cast("float")) \
+        .withColumn("Released", to_date(col("Released"), "yyyy-MM-dd"))
+
+    cargador.cargar_a_sql(df2, "peliculas", modo="append")
+
+    #cargador.cargar_a_sql(df2,"peliculas", modo="append")
     
     
     spark.stop()

@@ -22,6 +22,7 @@ x-airflow-common: &airflow-common
     - ./data:/opt/airflow/data
     - ./.env:/opt/airflow/.env
     - ./config:/opt/airflow/config
+    - ./jars:/opt/spark/jars
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     postgres:
@@ -71,6 +72,7 @@ services:
     volumes:
       - ./spark_scripts:/opt/spark/spark_scripts # <--- ESTE ES EL PUENTE
       - ./.env:/opt/spark/.env
+      - ./jars:/opt/spark/jars
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
 
   # Trabajador de Spark
