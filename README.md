@@ -148,3 +148,6 @@ Imagen del proceso realizado empleando Apache Airflow
 
 Imagen de los logs dentro de Apache Airflow
 ![descripción](img/logs_etlPelisv2.png)
+
+Dashboard ejemplo(sin analisis) del etl realizado
+![descripción](img/Dashboard_ETL.png)
