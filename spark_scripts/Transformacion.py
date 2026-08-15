@@ -307,13 +307,7 @@ if __name__ == "__main__":
     def _limpiar_y_sanitizar(self, df: pd.DataFrame) -> pd.DataFrame:
         #Renombra columnas, estandariza tipos de datos y elimina duplicados.
        
-        # Renombrado de columnas (mapeo explícito)
        
-        
-        # Eliminación de duplicados en la llave lógica
-        df_clean = df_clean.drop_duplicates(subset=["fecha"]).reset_index(drop=True)
-        
-        return df_clean
 
     
     # * NUEVA ETAPA: VALIDACIÓN DE CALIDAD DE DATOS (Data Quality)
@@ -358,15 +352,5 @@ if __name__ == "__main__":
     
 
     
-    # PIPELINE DE TRANSFORMACIÓN PRINCIPAL (Micro-Orquestador)
-    
-    
-            
-        except KeyError as e:
-            logging.error(f"Fallo crítico por esquema de datos erróneo: {e}")
-            raise
-        except Exception as e:
-            logging.error(f"Error inesperado en la fase de transformación: {e}")
-            raise
 
          """
