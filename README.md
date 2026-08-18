@@ -149,5 +149,12 @@ Imagen del proceso realizado empleando Apache Airflow
 Imagen de los logs dentro de Apache Airflow
 ![descripción](img/logs_etlPelisv2.png)
 
+Imagen de los datos cargados a PostgreSQL
+![descripción](img/carga_posgresETLPelis.png)
+
+Imagen de la importación de datos de PostgreSQL a Power BI
+![descripción](img/importarPelisPBI.png)
+
+
 Dashboard ejemplo(sin analisis) del etl realizado
 ![descripción](img/Dashboard_ETL.png)
