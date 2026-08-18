@@ -156,5 +156,5 @@ Imagen de la importación de datos de PostgreSQL a Power BI
 ![descripción](img/importarPelisPBI.png)
 
 
-Dashboard ejemplo(sin EDA) del etl realizado
+Dashboard ejemplo(sin EDA) del ETL realizado
 ![descripción](img/Dashboard_ETL.png)
